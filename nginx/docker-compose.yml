@@ -1,0 +1,9 @@
+version: '2'
+
+services:
+  amwnginx:
+      image: nginx:latest
+      ports:
+          - 8081:80
+      volumes_from:
+          - myphp

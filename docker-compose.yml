@@ -1,0 +1,72 @@
+# Adopt version 2 syntax:
+#   https://docs.docker.com/compose/compose-file/#/versioning
+version: '2'
+
+
+services:
+###########################
+# Setup the Nginx container
+###########################
+    amwnginx:
+        image: nginx:latest
+        ports:
+            - 8081:80
+        volumes_from:
+            - myphp
+        volumes:
+            - ./nginx/site.conf:/etc/nginx/conf.d/site.conf
+        environment:
+            - NGINX_HOST:php-docker.local
+            - NGINX_PORT:80
+        networks:
+            - amw-network
+
+###########################
+# Setup the PHP container
+###########################
+    myphp:
+        build: ./php53/
+        expose:
+            - 9000
+        volumes:
+            - ./php53/.:/var/www/html:rw
+            - ./code/www.conf:/usr/local/etc/php-fpm.d/www.conf
+        depends_on:
+            - amwDB
+        networks:
+            - amw-network
+
+###########################
+# Setup the PHPMYADMIN
+###########################
+    myadmin:
+        image: phpmyadmin/phpmyadmin
+        ports:
+            - 8080:80
+        depends_on:
+            - amwDB
+        environment:
+            PMA_HOST: amwDB
+        networks:
+            - amw-network
+
+###########################
+# Setup the Database (MySQL) container
+###########################
+    amwDB:
+        image: mysql:latest
+        expose:
+            - 3306
+        volumes_from:
+            - container:amwDB_data
+        environment:
+            MYSQL_ROOT_PASSWORD: Wyl@990116
+            MYSQL_DATABASE: amwDB
+            MYSQL_USER: peadmin
+            MYSQL_PASSWORD: peadmin
+        networks:
+            - amw-network
+
+networks:
+    amw-network:
+        driver: bridge
